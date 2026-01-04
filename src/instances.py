@@ -7,8 +7,9 @@ from PySide6.QtWidgets import (
     QFrame,
     QPushButton,
     QMessageBox,
+    QSizePolicy,
 )
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from dataclasses import dataclass
 import utils, launcher
 
@@ -17,10 +18,27 @@ class Instance:
     name: str
     path: str
 
+class Card(QFrame):
+    clicked = Signal()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.setFrameShape(QFrame.NoFrame)
+
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.LeftButton:
+            self.clicked.emit()
+
 class InstanceManager(QWidget):
     def __init__(self):
         super().__init__()
+        
         self.instances: list[Instance] = []
+        self.selected_inst_path: str = None
+
         self.proc: launcher.sp.Popen = None
 
         self.main_layout = QVBoxLayout(self)
@@ -39,6 +57,12 @@ class InstanceManager(QWidget):
         self.scrolla.setWidget(self.scroll_content)
         
         self.main_layout.addWidget(self.scrolla)
+
+        play_btn = QPushButton("Play")
+        play_btn.setCursor(Qt.PointingHandCursor)
+        play_btn.setStyleSheet("background-color: #4CAF50; color: white; padding: 5px 15px; border: none;")
+        play_btn.clicked.connect(self.handle_play)
+        self.main_layout.addWidget(play_btn)
 
         self.load_instances()
 
@@ -62,29 +86,32 @@ class InstanceManager(QWidget):
 
         if not self.instances:
             self.instance_layout.addWidget(QLabel("No local versions found. Consider adding one."))
+            return
+        
+        if not self.selected_inst_path: self.selected_inst_path = self.instances[0].path
 
         for inst in self.instances:
-            card = QWidget()
+            is_selected = self.selected_inst_path == inst.path
+
+            card = Card()
             card.setStyleSheet("background-color: #f0f0f0; border-radius: 5px;")
+            if is_selected: card.setStyleSheet("background-color: #0d6efd; border-radius: 5px; color: white;")
+            card.clicked.connect(lambda v=inst.path: self.handle_select(v))
+            card.setCursor(Qt.PointingHandCursor)
 
             box = QHBoxLayout(card)
 
             label = QLabel(inst.name)
             label.setStyleSheet("font-weight: bold; font-size: 14px;")
 
-            play_btn = QPushButton("Play")
-            play_btn.setCursor(Qt.PointingHandCursor)
-            play_btn.setStyleSheet("background-color: #4CAF50; color: white; padding: 5px 15px; border: none;")
-            play_btn.clicked.connect(lambda checked, v=inst.name: self.handle_play(v))
-
             box.addWidget(label)
             box.addStretch()
-            box.addWidget(play_btn)
 
             card.setLayout(box)
             self.instance_layout.addWidget(card)
 
-    def handle_play(self, version):
+    def handle_play(self):
+        version = [v for v in self.instances if v.path == self.selected_inst_path][0].name
         print(f"PLAYING: {version}")
 
         worker = utils.Worker(launcher.launch_mc)(version)
@@ -93,6 +120,10 @@ class InstanceManager(QWidget):
         worker.signals.error.connect(self.onerror)
 
         utils.pool.start(worker)
+
+    def handle_select(self, v):
+        self.selected_inst_path = v
+        self.update_instances()
 
     def launch_success(self, proc):
         self.proc = proc
