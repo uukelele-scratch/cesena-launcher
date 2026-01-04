@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QHBoxLayout
 from PySide6.QtCore import QSize
 import sys
 
@@ -14,12 +14,14 @@ class Cesena(QMainWindow):
         self.instance_manager = instances.InstanceManager()
         self.auth_manager = auth.AuthManager()
 
-        self.tab_manager = QTabWidget()
+        self.main_widget = QWidget()
+        self.main_layout = QHBoxLayout()
+        self.main_widget.setLayout(self.main_layout)
 
-        self.tab_manager.addTab(self.instance_manager, 'Instances')
-        self.tab_manager.addTab(self.auth_manager, 'Auth')
+        self.main_layout.addWidget(self.instance_manager)
+        self.main_layout.addWidget(self.auth_manager)
 
-        self.setCentralWidget(self.tab_manager)
+        self.setCentralWidget(self.main_widget)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

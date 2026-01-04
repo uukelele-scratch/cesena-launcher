@@ -13,6 +13,7 @@ from PySide6.QtCore import Qt
 from dataclasses import dataclass
 
 import utils
+from card import Card
 
 @dataclass
 class Account:
@@ -78,12 +79,12 @@ class AuthManager(QWidget):
         for inst in self.accounts:
             is_selected = (inst.username == self.current_account)
 
-            card = QWidget()
+            card = Card()
 
-            if is_selected:
-                card.setStyleSheet("background-color: #d1e7dd; border: 1px solid #0f5132; border-radius: 5px;")
-            else:
-                card.setStyleSheet("background-color: #f0f0f0; border-radius: 5px;")
+            card.setStyleSheet("background-color: #f0f0f0; border-radius: 5px;")
+            if is_selected: card.setStyleSheet("background-color: #0d6efd; border-radius: 5px; color: white;")
+            card.clicked.connect(lambda a=inst.username: self.handle_select(a))
+            card.setCursor(Qt.PointingHandCursor)
 
             box = QHBoxLayout(card)
 
@@ -95,23 +96,9 @@ class AuthManager(QWidget):
             delete_btn.setStyleSheet("background-color: #ee1313; color: white; padding: 5px 15px; border: none;")
             delete_btn.clicked.connect(lambda checked, a=inst.username: self.handle_delete(a))
 
-            if is_selected:
-                status_lbl = QLabel("Active")
-                status_lbl.setStyleSheet("color: #0f5132; font-weight: bold;")
-                box.addWidget(label)
-                box.addStretch()
-                box.addWidget(delete_btn)
-                box.addWidget(status_lbl)
-            else:
-                select_btn = QPushButton("Select")
-                select_btn.setCursor(Qt.PointingHandCursor)
-                select_btn.setStyleSheet("background-color: #0d6efd; color: white; padding: 5px 15px; border: none;")
-                select_btn.clicked.connect(lambda checked, a=inst.username: self.handle_select(a))
-                
-                box.addWidget(label)
-                box.addStretch()
-                box.addWidget(delete_btn)
-                box.addWidget(select_btn)
+            box.addWidget(label)
+            box.addStretch()
+            box.addWidget(delete_btn)
 
             card.setLayout(box)
             self.accounts_layout.addWidget(card)

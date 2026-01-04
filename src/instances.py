@@ -9,28 +9,15 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QSizePolicy,
 )
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt
 from dataclasses import dataclass
 import utils, launcher
+from card import Card
 
 @dataclass
 class Instance:
     name: str
     path: str
-
-class Card(QFrame):
-    clicked = Signal()
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        self.setFrameShape(QFrame.NoFrame)
-
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            self.clicked.emit()
 
 class InstanceManager(QWidget):
     def __init__(self):
@@ -58,11 +45,11 @@ class InstanceManager(QWidget):
         
         self.main_layout.addWidget(self.scrolla)
 
-        play_btn = QPushButton("Play")
-        play_btn.setCursor(Qt.PointingHandCursor)
-        play_btn.setStyleSheet("background-color: #4CAF50; color: white; padding: 5px 15px; border: none;")
-        play_btn.clicked.connect(self.handle_play)
-        self.main_layout.addWidget(play_btn)
+        self.play_btn = QPushButton("Play")
+        self.play_btn.setCursor(Qt.PointingHandCursor)
+        self.play_btn.setStyleSheet("background-color: #4CAF50; color: white; padding: 5px 15px; border: none; border-radius: 5px;")
+        self.play_btn.clicked.connect(self.handle_play)
+        self.main_layout.addWidget(self.play_btn)
 
         self.load_instances()
 
@@ -92,6 +79,8 @@ class InstanceManager(QWidget):
 
         for inst in self.instances:
             is_selected = self.selected_inst_path == inst.path
+
+            if is_selected: self.play_btn.setText(f"Play ({inst.name})")
 
             card = Card()
             card.setStyleSheet("background-color: #f0f0f0; border-radius: 5px;")
