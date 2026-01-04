@@ -13,7 +13,7 @@ from PySide6.QtCore import Qt
 from dataclasses import dataclass
 
 import utils
-from card import Card
+from card import Card, default_style, selected_style
 
 @dataclass
 class Account:
@@ -81,8 +81,8 @@ class AuthManager(QWidget):
 
             card = Card()
 
-            card.setStyleSheet("background-color: #f0f0f0; border-radius: 5px;")
-            if is_selected: card.setStyleSheet("background-color: #0d6efd; border-radius: 5px; color: white;")
+            card.setStyleSheet(default_style)
+            if is_selected: card.setStyleSheet(selected_style)
             card.clicked.connect(lambda a=inst.username: self.handle_select(a))
             card.setCursor(Qt.PointingHandCursor)
 
@@ -93,7 +93,7 @@ class AuthManager(QWidget):
 
             delete_btn = QPushButton("Delete")
             delete_btn.setCursor(Qt.PointingHandCursor)
-            delete_btn.setStyleSheet("background-color: #ee1313; color: white; padding: 5px 15px; border: none;")
+            delete_btn.setStyleSheet("background-color: #ee1313; color: white; padding: 5px 15px; border: none; border-radius: 5px;")
             delete_btn.clicked.connect(lambda checked, a=inst.username: self.handle_delete(a))
 
             box.addWidget(label)

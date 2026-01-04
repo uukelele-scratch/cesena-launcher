@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from dataclasses import dataclass
 import utils, launcher
-from card import Card
+from card import Card, default_style, selected_style
 
 @dataclass
 class Instance:
@@ -29,9 +29,6 @@ class InstanceManager(QWidget):
         self.proc: launcher.sp.Popen = None
 
         self.main_layout = QVBoxLayout(self)
-
-        self.info_label = QLabel()
-        self.main_layout.addWidget(self.info_label)
 
         self.scrolla = QScrollArea()
         self.scrolla.setWidgetResizable(True)
@@ -63,7 +60,6 @@ class InstanceManager(QWidget):
             for v in utils.get_local_versions()
         ]
         self.update_instances()
-        self.info_label.setText(f'Selected Account: {utils.get_selected_username()}')
 
     def update_instances(self):
         while self.instance_layout.count():
@@ -83,8 +79,8 @@ class InstanceManager(QWidget):
             if is_selected: self.play_btn.setText(f"Play ({inst.name})")
 
             card = Card()
-            card.setStyleSheet("background-color: #f0f0f0; border-radius: 5px;")
-            if is_selected: card.setStyleSheet("background-color: #0d6efd; border-radius: 5px; color: white;")
+            card.setStyleSheet(default_style)
+            if is_selected: card.setStyleSheet(selected_style)
             card.clicked.connect(lambda v=inst.path: self.handle_select(v))
             card.setCursor(Qt.PointingHandCursor)
 
