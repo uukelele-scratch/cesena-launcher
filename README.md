@@ -2,6 +2,10 @@
 
 CesenaLauncher - A launcher for Minecraft, optimized for giving you the best experience possible.
 
+## Screenshots
+
+![image](https://raw.githubusercontent.com/uukelele-scratch/cesena-launcher/refs/heads/main/.github/assets/image.png)
+
 ## Features
 
 ### Cross-Platform
