@@ -12,8 +12,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt
 from dataclasses import dataclass
 
-import utils
-from card import Card, default_style, selected_style
+import utils, ui
 
 @dataclass
 class Account:
@@ -27,7 +26,6 @@ class AuthManager(QWidget):
         self.current_account: str = None
 
         self.main_layout = QVBoxLayout(self)
-
         self.add_layout = QHBoxLayout()
         
         self.username_label = QLabel("Username: ")
@@ -42,16 +40,13 @@ class AuthManager(QWidget):
         
         self.main_layout.addLayout(self.add_layout)
 
-        self.scrolla = QScrollArea()
-        self.scrolla.setWidgetResizable(True)
-        self.scrolla.setFrameShape(QFrame.NoFrame)
+        self.info_label = QLabel()
+        self.main_layout.addWidget(self.info_label)
 
-        self.scroll_content = QWidget()
-        self.accounts_layout = QVBoxLayout(self.scroll_content)
-        self.accounts_layout.setAlignment(Qt.AlignTop)
-
-        self.scrolla.setWidget(self.scroll_content)
-        
+        self.scrolla = ui.List()
+        self.scrolla.on_selection.connect(self.handle_select)
+        self.scrolla.on_delete.connect(self.handle_delete)
+        self.scrolla.on_reorder.connect(self.handle_reorder)
         self.main_layout.addWidget(self.scrolla)
 
         self.load_accounts()
@@ -68,40 +63,32 @@ class AuthManager(QWidget):
         self.update_accounts()
 
     def update_accounts(self):
-        while self.accounts_layout.count():
-            item = self.accounts_layout.takeAt(0)
-            widget = item.widget()
-            if widget: widget.deleteLater()
+        self.scrolla.clear()
 
         if not self.accounts:
-            self.accounts_layout.addWidget(QLabel("No accounts found. Consider adding one."))
+            self.info_label.setText("No accounts found. Consider adding one.")
+            return
+        else: self.info_label.setText("")
 
         for inst in self.accounts:
-            is_selected = (inst.username == self.current_account)
+            self.scrolla.addCard(
+                uid=inst.username,
+                text=inst.username,
+                is_selected=(inst.username == self.current_account),
+                show_delete=True,
+            )
 
-            card = Card()
-
-            card.setStyleSheet(default_style)
-            if is_selected: card.setStyleSheet(selected_style)
-            card.clicked.connect(lambda a=inst.username: self.handle_select(a))
-            card.setCursor(Qt.PointingHandCursor)
-
-            box = QHBoxLayout(card)
-
-            label = QLabel(inst.username)
-            label.setStyleSheet("font-weight: bold; font-size: 14px;")
-
-            delete_btn = QPushButton("Delete")
-            delete_btn.setCursor(Qt.PointingHandCursor)
-            delete_btn.setStyleSheet("background-color: #ee1313; color: white; padding: 5px 15px; border: none; border-radius: 5px;")
-            delete_btn.clicked.connect(lambda checked, a=inst.username: self.handle_delete(a))
-
-            box.addWidget(label)
-            box.addStretch()
-            box.addWidget(delete_btn)
-
-            card.setLayout(box)
-            self.accounts_layout.addWidget(card)
+    def save_accounts(self):
+        self.accounts = []
+        
+        for i in range(self.scrolla.count()):
+            item = self.scrolla.item(i)
+            widget = self.scrolla.itemWidget(item)
+            
+            name = widget.username
+            self.accounts.append(Account(name))
+            
+        self.save()
 
     def save(self):
         data = {
@@ -128,19 +115,20 @@ class AuthManager(QWidget):
         self.save()
         self.update_accounts()
 
+    def handle_reorder(self, new_order_ids):
+        self.accounts = [Account(uid) for uid in new_order_ids]
+        self.save()
+
     def handle_select(self, username):
         self.current_account = username
         self.save()
         self.update_accounts()
 
     def handle_delete(self, username):
-        self.accounts = [acc for acc in self.accounts if acc.username != username]
-    
+        self.accounts = [a for a in self.accounts if a.username != username]
+        
         if self.current_account == username:
-            if len(self.accounts) == 0:
-                self.current_account = None
-            else:
-                self.current_account = self.accounts[0].username
-     
+            self.current_account = self.accounts[0].username if self.accounts else None
+            
         self.save()
         self.update_accounts()

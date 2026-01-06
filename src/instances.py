@@ -11,8 +11,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from dataclasses import dataclass
-import utils, launcher
-from card import Card, default_style, selected_style
+import utils, launcher, ui
 
 @dataclass
 class Instance:
@@ -30,16 +29,12 @@ class InstanceManager(QWidget):
 
         self.main_layout = QVBoxLayout(self)
 
-        self.scrolla = QScrollArea()
-        self.scrolla.setWidgetResizable(True)
-        self.scrolla.setFrameShape(QFrame.NoFrame)
+        self.info_label = QLabel()
+        self.main_layout.addWidget(self.info_label)
 
-        self.scroll_content = QWidget()
-        self.instance_layout = QVBoxLayout(self.scroll_content)
-        self.instance_layout.setAlignment(Qt.AlignTop)
-
-        self.scrolla.setWidget(self.scroll_content)
-        
+        self.scrolla = ui.List()
+        self.scrolla.on_selection.connect(self.handle_select)
+        self.scrolla.on_reorder.connect(self.handle_reorder)
         self.main_layout.addWidget(self.scrolla)
 
         self.play_btn = QPushButton("Play")
@@ -62,41 +57,33 @@ class InstanceManager(QWidget):
         self.update_instances()
 
     def update_instances(self):
-        while self.instance_layout.count():
-            item = self.instance_layout.takeAt(0)
-            widget = item.widget()
-            if widget: widget.deleteLater()
+        self.scrolla.clear()
 
         if not self.instances:
-            self.instance_layout.addWidget(QLabel("No local versions found. Consider adding one."))
+            self.info_label.setText("No local versions found. Consider adding one.")
             return
+        else: self.info_label.setText("")
         
         if not self.selected_inst_path: self.selected_inst_path = self.instances[0].path
 
         for inst in self.instances:
-            is_selected = self.selected_inst_path == inst.path
+            is_selected = (inst.path == self.selected_inst_path)
+            
+            if is_selected:
+                self.play_btn.setText(f"Play ({utils.format_vid(inst.name)})")
 
-            if is_selected: self.play_btn.setText(f"Play ({inst.name})")
-
-            card = Card()
-            card.setStyleSheet(default_style)
-            if is_selected: card.setStyleSheet(selected_style)
-            card.clicked.connect(lambda v=inst.path: self.handle_select(v))
-            card.setCursor(Qt.PointingHandCursor)
-
-            box = QHBoxLayout(card)
-
-            label = QLabel(inst.name)
-            label.setStyleSheet("font-weight: bold; font-size: 14px;")
-
-            box.addWidget(label)
-            box.addStretch()
-
-            card.setLayout(box)
-            self.instance_layout.addWidget(card)
+            self.scrolla.addCard(
+                uid=inst.path,
+                text=utils.format_vid(inst.name),
+                is_selected=is_selected,
+                show_delete=False 
+            )
 
     def handle_play(self):
         version = [v for v in self.instances if v.path == self.selected_inst_path][0].name
+
+        self.window().hide()
+        
         print(f"PLAYING: {version}")
 
         worker = utils.Worker(launcher.launch_mc)(version)
@@ -106,8 +93,14 @@ class InstanceManager(QWidget):
 
         utils.pool.start(worker)
 
-    def handle_select(self, v):
-        self.selected_inst_path = v
+    def handle_reorder(self, new_order_paths):
+        map = {inst.path: inst for inst in self.instances}
+        self.instances = [map[path] for path in new_order_paths if path in map]
+        
+        utils.save_instance_order([inst.name for inst in self.instances])
+
+    def handle_select(self, path):
+        self.selected_inst_path = path
         self.update_instances()
 
     def launch_success(self, proc):
