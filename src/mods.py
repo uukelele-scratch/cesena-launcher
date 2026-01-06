@@ -86,7 +86,9 @@ class ModManager(QWidget):
         for mod in results:
             self.results_list.addCard(
                 uid=mod["project_id"], 
-                text=mod["title"], 
+                text=mod["title"],
+                description=mod.get('description', 'No description provided.'),
+                icon_url=mod.get('icon_url'),
                 is_selected=False,
                 show_delete=False,
             )
@@ -109,6 +111,8 @@ class ModManager(QWidget):
             self.installed_list.addCard(
                 uid=mod['project_id'],
                 text=mod['title'],
+                description=mod.get('description', 'No description provided.'),
+                icon_url=mod.get('icon_url'),
                 is_selected=False,
                 show_delete=True,
             )
