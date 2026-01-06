@@ -174,3 +174,10 @@ def get_version_json(version_id, mc_dir):
         import traceback
         traceback.print_exc()
         return None
+    
+def short_num(n: int) -> str:
+    for unit in ("", "k", "m", "b", "t"):
+        if abs(n) < 1000:
+            return f"{n:g}{unit}"
+        n = round(n / 1000, 1)
+    return str(n)

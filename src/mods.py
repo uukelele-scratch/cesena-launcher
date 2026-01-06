@@ -87,7 +87,7 @@ class ModManager(QWidget):
             self.results_list.addCard(
                 uid=mod["project_id"], 
                 text=mod["title"],
-                description=mod.get('description', 'No description provided.'),
+                description=f'{utils.short_num(mod.get("downloads", 0))} downloads • ' + mod.get('description', 'No description provided.'),
                 icon_url=mod.get('icon_url'),
                 is_selected=False,
                 show_delete=False,

@@ -27,6 +27,7 @@ def search_mods(query: str):
             "title":        h["title"],
             "description":  h["description"],
             "icon_url":     h["icon_url"],
+            "downloads":    h["downloads"],
         }
         for h in hits
     ]
