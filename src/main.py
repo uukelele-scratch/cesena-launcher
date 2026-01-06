@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel
 from PySide6.QtCore import QSize
+from PySide6.QtGui import QPixmap
 import sys
 
 import utils, instances, auth, mods
@@ -10,6 +11,8 @@ class Cesena(QMainWindow):
 
         self.setWindowTitle("Cesena")
         self.resize(QSize(1366, 768))
+
+        self.setWindowIcon(QPixmap('assets/logo.png'))
 
         self.main_widget = QWidget()
         self.main_layout = QVBoxLayout()
