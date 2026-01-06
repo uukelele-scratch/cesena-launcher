@@ -14,6 +14,7 @@ jobs:
       icon_png: "assets/icon.png"
       version: ${{ github.event.release.tag_name }}
       app_id: "96bf4544-bf4f-4d19-a2a2-bd0e66374699"
+      entry_point: "src/main.py"
 
   publish:
     needs: build
