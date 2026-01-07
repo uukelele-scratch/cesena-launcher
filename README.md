@@ -27,5 +27,6 @@ No Electron! Save your system resources!
 - [x] Modrinth Integration (Search & Install)
 - [x] Auto-downloading Vanilla assets & Natives
 - [ ] **Microsoft/Xbox Authentication**
+- [ ] Download & Install instances
 - [ ] Modpack Import/Export
 - [ ] Java Runtime Auto-Discovery
